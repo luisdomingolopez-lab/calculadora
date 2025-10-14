@@ -17,9 +17,11 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake
-          pip install buildozer
           
-      # --- PASO CRÍTICO: CREAR EL buildozer.spec CON LA SOLUCIÓN REGEX FORZADA ---
+          # ¡CRÍTICO: INSTALAR CYTHON!
+          pip install buildozer cython
+          
+      # --- CREAR EL buildozer.spec CON LA SOLUCIÓN REGEX FORZADA ---
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -27,10 +29,10 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.11
-          app.build = 73
+          app.version = 1.1.12
+          app.build = 74
           
-          # CRÍTICO: Estas líneas fuerzan la lectura de la versión desde este archivo
+          # CRÍTICO: Forzamos la lectura de versión para evitar el bug del parser
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
           
