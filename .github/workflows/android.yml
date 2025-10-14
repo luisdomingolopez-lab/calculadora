@@ -8,30 +8,57 @@ jobs:
     runs-on: ubuntu-latest 
 
     steps:
-      - name: Checkout Code
-        # CRÍTICO: Usa la configuración más simple de checkout
+      - name: Checkout Code (Forzado)
         uses: actions/checkout@v4 
         with:
-          fetch-depth: 0 # Asegura que toda la rama sea descargada.
+          fetch-depth: 0 
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-          
       - name: Install Buildozer and Dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake
           pip install buildozer
           
-      - name: Build Android APK
+      # --- PASO CRÍTICO: CREAR EL buildozer.spec DENTRO DEL WORKFLOW ---
+      - name: Create buildozer.spec
         run: |
-          # Ahora el buildozer.spec debe estar presente.
+          cat > buildozer.spec << EOF
+          [app]
+          title = Gestor Tasa JSON FINAL
+          package.name = gestor_tasas_app_json
+          package.domain = com.pcsoffice
+          app.version = 1.1.10
+          app.build = 72
+          source.dir = .
+          
+          requirements = python3,kivy
+          
+          source.include_exts = py,png,jpg,kv,atlas,json
+          source.include_dirs = tasa_data.json
+          
+          icon.filename = icon_app.png
+          
+          android.api = 27
+          android.minapi = 21
+          android.ndk = 23b
+          
+          android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+          
+          log_level = 2
+          
+          [buildozer]
+          
+          log_level = 2
+          warn_on_metaroot = 0
+          EOF
+        
+      - name: Build Android APK
+        # Ahora Buildozer debe encontrar el archivo que acabamos de crear.
+        run: |
           buildozer android debug
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gestor-tasas-apk
-          path: bin/gestor_tasas_app_json-*-debug.apk
+          path: bin/gestor_tasas_app_json-*-debug.apk.apk
