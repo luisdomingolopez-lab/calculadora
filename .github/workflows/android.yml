@@ -20,14 +20,17 @@ jobs:
           
           pip install buildozer cython
           
+      # --- PASO CRÍTICO 1: CREAR LICENCIA EN EL PATH DE BUILDZER ---
       - name: Force Android SDK License Acceptance
+        # Este es el PATH interno que Buildozer/python-for-android verifica.
         run: |
-          mkdir -p ~/.android/
-          touch ~/.android/repositories.cfg
-          mkdir -p ~/.android/licenses/
-          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > ~/.android/licenses/android-sdk-license
+          # 1. Crea la estructura de directorios que Buildozer usará
+          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses/
           
-      # --- PASO CRÍTICO: CREAR EL buildozer.spec ---
+          # 2. Escribe el archivo de licencia para desbloquear la descarga de Aidl/Build-Tools
+          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          
+      # --- PASO CRÍTICO 2: CREAR EL buildozer.spec con la configuración estable ---
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -35,8 +38,8 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.19
-          app.build = 81
+          app.version = 1.1.20
+          app.build = 82
           
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
@@ -50,7 +53,6 @@ jobs:
           
           icon.filename = icon_app.png
           
-          # CONFIGURACIÓN FINAL: ESTABLE Y CONNDK ESPECÍFICO
           android.api = 27
           android.minapi = 21
           android.ndk = 21e
@@ -66,11 +68,9 @@ jobs:
           warn_on_metaroot = 0
           EOF
         
-      # --- SOLUCIÓN DE AIDL ---
       - name: Build Android APK
         run: |
-          # Forzamos el uso del toolchain NDK 21e para evitar el error Aidl
-          buildozer android debug --alias buildozer-ndk-r21e
+          buildozer android debug
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
