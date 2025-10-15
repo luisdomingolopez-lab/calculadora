@@ -16,18 +16,33 @@ jobs:
       - name: Install Buildozer and Dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake
+          # Aseguramos la instalación de 'unzip' para la descarga manual
+          sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake unzip
           
           pip install buildozer cython
           
       - name: Force Android SDK License Acceptance
-        # Corrige la ruta de licencias y permisos
+        # Corrige los permisos y acepta licencias
         run: |
-          # Crea la estructura de directorios que Buildozer usará para el SDK y licencias
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses/
-          
-          # Escribe el archivo de licencia para desbloquear la descarga de Build-Tools
           echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
+          
+      # --- PASO CRÍTICO: DESCARGA MANUAL DEL SDK (SOLUCIÓN sdkmanager/Aidl) ---
+      - name: Force SDK Tools Download
+        run: |
+          SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK_DIR
+          
+          # Descarga las herramientas antiguas y estables (tools_r25.2.5)
+          wget -q https://dl.google.com/android/repository/tools_r25.2.5-linux.zip -O android-tools.zip
+          
+          # Descomprime en $SDK_DIR. Esto crea la carpeta 'tools' con 'sdkmanager'
+          unzip -qq android-tools.zip -d $SDK_DIR 
+          
+          rm android-tools.zip
+          
+          echo "Verificando que la carpeta 'tools/bin' existe ahora:"
+          ls -l $SDK_DIR/tools/bin/
           
       - name: Create buildozer.spec
         run: |
@@ -36,8 +51,8 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.22
-          app.build = 84
+          app.version = 1.1.23
+          app.build = 85
           
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
@@ -67,8 +82,8 @@ jobs:
           EOF
         
       - name: Build Android APK
-        # --- CRÍTICO: FORZAR LA VARIABLE ANDROID_HOME ---
         env:
+          # Variable crítica para que Buildozer sepa dónde buscar el SDK que instalamos manualmente.
           ANDROID_HOME: ${{ runner.home }}/.buildozer/android/platform/android-sdk
         run: |
           buildozer android debug
