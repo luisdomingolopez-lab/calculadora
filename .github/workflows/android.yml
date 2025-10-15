@@ -20,7 +20,6 @@ jobs:
           
           pip install buildozer cython
           
-      # --- PASO CRÍTICO 1: FORZAR ACEPTACIÓN DE LICENCIAS ---
       - name: Force Android SDK License Acceptance
         run: |
           mkdir -p ~/.android/
@@ -28,7 +27,7 @@ jobs:
           mkdir -p ~/.android/licenses/
           echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > ~/.android/licenses/android-sdk-license
           
-      # --- PASO CRÍTICO 2: CREAR EL buildozer.spec CON BUILD_TOOLS ESPECÍFICO ---
+      # --- PASO CRÍTICO: CREAR EL buildozer.spec ---
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -36,10 +35,9 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.18
-          app.build = 80
+          app.version = 1.1.19
+          app.build = 81
           
-          # CRÍTICO: Forzamos la lectura de versión
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
           
@@ -52,11 +50,10 @@ jobs:
           
           icon.filename = icon_app.png
           
-          # --- CONFIGURACIÓN DE ENTORNO MÁS ESTABLE ---
+          # CONFIGURACIÓN FINAL: ESTABLE Y CONNDK ESPECÍFICO
           android.api = 27
           android.minapi = 21
           android.ndk = 21e
-          # CRÍTICO: Forzar la versión más estable de Build Tools para el error Aidl
           android.build_tools = 28.0.3 
           
           android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
@@ -69,9 +66,11 @@ jobs:
           warn_on_metaroot = 0
           EOF
         
+      # --- SOLUCIÓN DE AIDL ---
       - name: Build Android APK
         run: |
-          buildozer android debug
+          # Forzamos el uso del toolchain NDK 21e para evitar el error Aidl
+          buildozer android debug --alias buildozer-ndk-r21e
           
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
