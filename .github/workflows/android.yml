@@ -18,10 +18,18 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake
           
-          # CRÍTICO: INSTALAR CYTHON!
           pip install buildozer cython
           
-      # --- PASO CRÍTICO: CREAR EL buildozer.spec CON LA SOLUCIÓN REGEX Y APIs ESTABLES ---
+      # --- PASO CRÍTICO 1: FORZAR ACEPTACIÓN DE LICENCIAS DEL SDK ---
+      - name: Force Android SDK License Acceptance
+        run: |
+          mkdir -p ~/.android/
+          touch ~/.android/repositories.cfg
+          mkdir -p $ANDROIDSDK/licenses/
+          # Crea el archivo de licencia necesario para desbloquear la descarga de Build-Tools
+          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > $ANDROIDSDK/licenses/android-sdk-license
+          
+      # --- PASO CRÍTICO 2: CREAR EL buildozer.spec CON LA SOLUCIÓN REGEX Y APIs ESTABLES ---
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -29,8 +37,8 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.14
-          app.build = 76
+          app.version = 1.1.15
+          app.build = 77
           
           # CRÍTICO: Forzamos la lectura de versión
           version.regex = (\d+)\.(\d+)\.(\d+)
@@ -45,10 +53,10 @@ jobs:
           
           icon.filename = icon_app.png
           
-          # --- CONFIGURACIÓN MÁS ESTABLE PARA EVITAR FALLO DE DESCARGA AIDL/SDK ---
+          # --- CONFIGURACIÓN MÁS ESTABLE Y COMPATIBLE CON LICENCIAS ---
           android.api = 27
           android.minapi = 21
-          android.ndk = 23b
+          android.ndk = 25b
           
           android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
           
