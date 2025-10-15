@@ -20,16 +20,18 @@ jobs:
           
           pip install buildozer cython
           
-      # --- PASO CRÍTICO 1: FORZAR ACEPTACIÓN DE LICENCIAS DEL SDK ---
+      # --- PASO CRÍTICO 1: CORREGIR PERMISOS Y RUTA DE LICENCIAS ---
       - name: Force Android SDK License Acceptance
         run: |
+          # Se usa ~ para el directorio home del usuario (donde tiene permisos)
           mkdir -p ~/.android/
           touch ~/.android/repositories.cfg
-          mkdir -p $ANDROIDSDK/licenses/
-          # Crea el archivo de licencia necesario para desbloquear la descarga de Build-Tools
-          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > $ANDROIDSDK/licenses/android-sdk-license
           
-      # --- PASO CRÍTICO 2: CREAR EL buildozer.spec CON LA SOLUCIÓN REGEX Y APIs ESTABLES ---
+          # Se asegura que la carpeta de licencias de Android exista y se acepta la licencia
+          mkdir -p ~/.android/licenses/
+          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > ~/.android/licenses/android-sdk-license
+          
+      # --- PASO CRÍTICO 2: CREAR EL buildozer.spec con la configuración estable ---
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -37,10 +39,9 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.15
-          app.build = 77
+          app.version = 1.1.16
+          app.build = 78
           
-          # CRÍTICO: Forzamos la lectura de versión
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
           
@@ -53,7 +54,6 @@ jobs:
           
           icon.filename = icon_app.png
           
-          # --- CONFIGURACIÓN MÁS ESTABLE Y COMPATIBLE CON LICENCIAS ---
           android.api = 27
           android.minapi = 21
           android.ndk = 25b
@@ -70,6 +70,7 @@ jobs:
         
       - name: Build Android APK
         run: |
+          # Ahora todo está configurado y Buildozer puede descargar el SDK.
           buildozer android debug
           
       - name: Upload APK Artifact
