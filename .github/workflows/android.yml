@@ -20,18 +20,15 @@ jobs:
           
           pip install buildozer cython
           
-      # --- PASO CRÍTICO 1: CORREGIR PERMISOS Y RUTA DE LICENCIAS ---
       - name: Force Android SDK License Acceptance
+        # Corrige el error de "Permission denied" y acepta licencias para la descarga del SDK
         run: |
-          # Se usa ~ para el directorio home del usuario (donde tiene permisos)
           mkdir -p ~/.android/
           touch ~/.android/repositories.cfg
-          
-          # Se asegura que la carpeta de licencias de Android exista y se acepta la licencia
           mkdir -p ~/.android/licenses/
           echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > ~/.android/licenses/android-sdk-license
           
-      # --- PASO CRÍTICO 2: CREAR EL buildozer.spec con la configuración estable ---
+      # --- PASO CRÍTICO: CREAR EL buildozer.spec con la configuración más estable ---
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -39,9 +36,10 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.16
-          app.build = 78
+          app.version = 1.1.17
+          app.build = 79
           
+          # CRÍTICO: Forzamos la lectura de versión
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
           
@@ -54,9 +52,10 @@ jobs:
           
           icon.filename = icon_app.png
           
+          # --- CONFIGURACIÓN DE ENTORNO MÁS ESTABLE CON NDK 21e ---
           android.api = 27
           android.minapi = 21
-          android.ndk = 25b
+          android.ndk = 21e
           
           android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
           
@@ -70,7 +69,6 @@ jobs:
         
       - name: Build Android APK
         run: |
-          # Ahora todo está configurado y Buildozer puede descargar el SDK.
           buildozer android debug
           
       - name: Upload APK Artifact
