@@ -5,31 +5,27 @@ on:
 
 jobs:
   build:
-    # --- CRÍTICO: USAR UN CONTENEDOR DOCKER PRE-CONFIGURADO ---
     runs-on: ubuntu-latest
     container:
-      # Esta imagen Docker contiene Buildozer, Kivy, Android SDK/NDK preinstalados y configurados.
-      image: 'ghcr.io/x-c/buildozer-android:stable'
+      # --- SOLUCIÓN: Usamos la imagen verificada de la comunidad Kivy ---
+      image: 'ghcr.io/kivy/buildozer-android:latest'
       
     steps:
       - name: Checkout Code
-        # Descarga el código del repositorio
         uses: actions/checkout@v4 
         with:
           fetch-depth: 0 
           
-      # Eliminamos todos los pasos de instalación y licencia fallidos (pip install, apt install, mkdir...)
-      
       - name: Create buildozer.spec
-        # Recreamos el buildozer.spec con todas las correcciones de formato y dependencias (JSON)
+        # Recreamos el buildozer.spec con todas las correcciones
         run: |
           cat > buildozer.spec << EOF
           [app]
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.24
-          app.build = 86
+          app.version = 1.1.25
+          app.build = 87
           
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
@@ -43,6 +39,7 @@ jobs:
           
           icon.filename = icon_app.png
           
+          # La imagen Docker ya tiene estas versiones, pero las mantenemos por seguridad.
           android.api = 27
           android.minapi = 21
           android.ndk = 21e
