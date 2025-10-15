@@ -18,10 +18,10 @@ jobs:
           sudo apt update
           sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake
           
-          # ¡CRÍTICO: INSTALAR CYTHON!
+          # CRÍTICO: INSTALAR CYTHON!
           pip install buildozer cython
           
-      # --- CREAR EL buildozer.spec CON LA SOLUCIÓN REGEX FORZADA ---
+      # --- PASO CRÍTICO: CREAR EL buildozer.spec CON LA SOLUCIÓN REGEX Y APIs MODERNAS ---
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -29,10 +29,10 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.12
-          app.build = 74
+          app.version = 1.1.13
+          app.build = 75
           
-          # CRÍTICO: Forzamos la lectura de versión para evitar el bug del parser
+          # CRÍTICO: Forzamos la lectura de versión
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
           
@@ -45,9 +45,10 @@ jobs:
           
           icon.filename = icon_app.png
           
-          android.api = 27
-          android.minapi = 21
-          android.ndk = 23b
+          # --- ACTUALIZACIÓN DE ENTORNO PARA RESOLVER ERROR AIDL ---
+          android.api = 33
+          android.minapi = 24
+          android.ndk = 25b
           
           android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
           
