@@ -5,54 +5,31 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest 
-
+    # --- CRÍTICO: USAR UN CONTENEDOR DOCKER PRE-CONFIGURADO ---
+    runs-on: ubuntu-latest
+    container:
+      # Esta imagen Docker contiene Buildozer, Kivy, Android SDK/NDK preinstalados y configurados.
+      image: 'ghcr.io/x-c/buildozer-android:stable'
+      
     steps:
-      - name: Checkout Code (Forzado)
+      - name: Checkout Code
+        # Descarga el código del repositorio
         uses: actions/checkout@v4 
         with:
           fetch-depth: 0 
-
-      - name: Install Buildozer and Dependencies
-        run: |
-          sudo apt update
-          # Aseguramos la instalación de 'unzip' para la descarga manual
-          sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake unzip
           
-          pip install buildozer cython
-          
-      - name: Force Android SDK License Acceptance
-        # Corrige los permisos y acepta licencias
-        run: |
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses/
-          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          
-      # --- PASO CRÍTICO: DESCARGA MANUAL DEL SDK (SOLUCIÓN sdkmanager/Aidl) ---
-      - name: Force SDK Tools Download
-        run: |
-          SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
-          mkdir -p $SDK_DIR
-          
-          # Descarga las herramientas antiguas y estables (tools_r25.2.5)
-          wget -q https://dl.google.com/android/repository/tools_r25.2.5-linux.zip -O android-tools.zip
-          
-          # Descomprime en $SDK_DIR. Esto crea la carpeta 'tools' con 'sdkmanager'
-          unzip -qq android-tools.zip -d $SDK_DIR 
-          
-          rm android-tools.zip
-          
-          echo "Verificando que la carpeta 'tools/bin' existe ahora:"
-          ls -l $SDK_DIR/tools/bin/
-          
+      # Eliminamos todos los pasos de instalación y licencia fallidos (pip install, apt install, mkdir...)
+      
       - name: Create buildozer.spec
+        # Recreamos el buildozer.spec con todas las correcciones de formato y dependencias (JSON)
         run: |
           cat > buildozer.spec << EOF
           [app]
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.23
-          app.build = 85
+          app.version = 1.1.24
+          app.build = 86
           
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
@@ -82,9 +59,7 @@ jobs:
           EOF
         
       - name: Build Android APK
-        env:
-          # Variable crítica para que Buildozer sepa dónde buscar el SDK que instalamos manualmente.
-          ANDROID_HOME: ${{ runner.home }}/.buildozer/android/platform/android-sdk
+        # El comando 'buildozer' se ejecuta directamente dentro del contenedor funcional
         run: |
           buildozer android debug
           
