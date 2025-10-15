@@ -7,8 +7,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      # --- SOLUCIÓN: Usamos la imagen verificada de la comunidad Kivy ---
-      image: 'ghcr.io/kivy/buildozer-android:latest'
+      # --- SOLUCIÓN FINAL: Usamos una imagen de Docker Hub muy estable ---
+      image: 'ppareit/buildozer-android:latest'
       
     steps:
       - name: Checkout Code
@@ -24,8 +24,8 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.25
-          app.build = 87
+          app.version = 1.1.26
+          app.build = 88
           
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
@@ -39,7 +39,7 @@ jobs:
           
           icon.filename = icon_app.png
           
-          # La imagen Docker ya tiene estas versiones, pero las mantenemos por seguridad.
+          # La imagen Docker ya tiene estas versiones preconfiguradas.
           android.api = 27
           android.minapi = 21
           android.ndk = 21e
@@ -56,7 +56,6 @@ jobs:
           EOF
         
       - name: Build Android APK
-        # El comando 'buildozer' se ejecuta directamente dentro del contenedor funcional
         run: |
           buildozer android debug
           
