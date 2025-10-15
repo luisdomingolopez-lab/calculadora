@@ -16,21 +16,29 @@ jobs:
       - name: Install Buildozer and Dependencies
         run: |
           sudo apt update
-          sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake
+          sudo apt install -y build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libtool autoconf automake unzip
           
           pip install buildozer cython
           
-      # --- PASO CRÍTICO 1: CREAR LICENCIA EN EL PATH DE BUILDZER ---
       - name: Force Android SDK License Acceptance
-        # Este es el PATH interno que Buildozer/python-for-android verifica.
         run: |
-          # 1. Crea la estructura de directorios que Buildozer usará
-          mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses/
+          mkdir -p ~/.android/
+          touch ~/.android/repositories.cfg
+          mkdir -p ~/.android/licenses/
+          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > ~/.android/licenses/android-sdk-license
           
-          # 2. Escribe el archivo de licencia para desbloquear la descarga de Aidl/Build-Tools
-          echo 8933cc4444d37256d151a1460ec2770335ee9ed6 > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
-          
-      # --- PASO CRÍTICO 2: CREAR EL buildozer.spec con la configuración estable ---
+      # --- PASO CRÍTICO: DESCARGA FORZADA DE LAS SDK TOOLS (SOLUCIÓN A sdkmanager not found) ---
+      - name: Force SDK Tools Download
+        run: |
+          SDK_DIR=$HOME/.buildozer/android/platform/android-sdk
+          # Crea la estructura que Buildozer no pudo crear
+          mkdir -p $SDK_DIR
+          # Descarga una versión estable de las herramientas del SDK (v25.2.5)
+          wget --no-check-certificate https://dl.google.com/android/repository/tools_r25.2.5-linux.zip -O android-tools.zip
+          unzip -qq android-tools.zip -d $SDK_DIR
+          # Limpia el archivo descargado
+          rm android-tools.zip
+
       - name: Create buildozer.spec
         run: |
           cat > buildozer.spec << EOF
@@ -38,8 +46,8 @@ jobs:
           title = Gestor Tasa JSON FINAL
           package.name = gestor_tasas_app_json
           package.domain = com.pcsoffice
-          app.version = 1.1.20
-          app.build = 82
+          app.version = 1.1.21
+          app.build = 83
           
           version.regex = (\d+)\.(\d+)\.(\d+)
           version.filename = buildozer.spec
@@ -53,6 +61,7 @@ jobs:
           
           icon.filename = icon_app.png
           
+          # CONFIGURACIÓN DE ENTORNO
           android.api = 27
           android.minapi = 21
           android.ndk = 21e
